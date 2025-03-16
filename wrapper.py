@@ -36,12 +36,27 @@ def keyExtractor(keys: list, data: dict):
     else:
         return None
 
+
 @app.route('/<path:path>', methods=["POST", "PUT"])
 def catch_all(path):
     if request.headers.get("Content-Type") == "application/json":
-        res = requests.post(url=os.path.join(api_url, path), data=request.get_json()) #TODO: use keyExtractor
-        print(keyExtractor(["alerts", "status"], request.get_json()))
+        jdata = request.get_json()
+        template = f"""
+            {keyExtractor("alerts.status".split("."), jdata)}
+
+            {keyExtractor("alerts.labels.alertname".split("."), jdata)}
+
+            {keyExtractor("alerts.labels.queue".split("."), jdata)}
+
+            {keyExtractor("alerts.startsAt".split("."), jdata)}
+
+            {keyExtractor("alerts.annotations.description".split("."), jdata)}
+
+            {keyExtractor("alerts.annotations.summary".split("."), jdata)}
+        """
+        res = requests.post(url=os.path.join(api_url, path), data=template)
         print(res.status_code, path) if os.environ.get("DEBUG") == 'true' else ... 
+
         return [res.status_code, os.path.join(api_url, path)]
     else:
         return "content type should be json and you should send json data\n"
