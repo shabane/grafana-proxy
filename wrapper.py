@@ -36,6 +36,9 @@ def keyExtractor(keys: list, data: dict):
     else:
         return None
 
+def sendNtfy(template: str, url: str) -> int:
+    res = requests.post(url, data=template)
+    return res.status_code
 
 @app.route('/<path:path>', methods=["POST", "PUT"])
 def catch_all(path):
@@ -54,10 +57,9 @@ def catch_all(path):
 
             {keyExtractor("alerts.annotations.summary".split("."), jdata)}
         """
-        res = requests.post(url=os.path.join(api_url, path), data=template)
-        print(res.status_code, path) if os.environ.get("DEBUG") == 'true' else ... 
-
-        return [res.status_code, os.path.join(api_url, path)]
+        res = sendNtfy(template, os.path.join(api_url, path))
+        print(res, path) if os.environ.get("DEBUG") == 'true' else ... 
+        return [res, os.path.join(api_url, path)]
     else:
         return "content type should be json and you should send json data\n"
 
