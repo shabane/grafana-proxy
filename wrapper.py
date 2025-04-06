@@ -44,24 +44,33 @@ def sendNtfy(template: str, url: str) -> int:
 def catch_all(path):
     if request.headers.get("Content-Type") == "application/json":
         jdata = request.get_json()
-        template = f"""
-            {keyExtractor("alerts.status".split("."), jdata)}
 
-            {keyExtractor("alerts.labels.alertname".split("."), jdata)}
+        st = keyExtractor("alerts.status".split("."), jdata) or ['EMPTY']
+        al = keyExtractor("alerts.labels.alertname".split("."), jdata) or ['EMPTY']
+        qu = keyExtractor("alerts.labels.queue".split("."), jdata) or ['EMPTY']
+        sa = keyExtractor("alerts.startsAt".split("."), jdata) or ['EMPTY']
+        de = keyExtractor("alerts.annotations.description".split("."), jdata) or ['EMPTY']
+        su = keyExtractor("alerts.annotations.summary".split("."), jdata) or ['EMPTY']
 
-            {keyExtractor("alerts.labels.queue".split("."), jdata)}
+        for _st, _al, _qu, _sa, _de, _su in zip(st, al, qu, sa, de, su):
+            template = f"""
+                {_st}
 
-            {keyExtractor("alerts.startsAt".split("."), jdata)}
+                {_al}
 
-            {keyExtractor("alerts.annotations.description".split("."), jdata)}
+                {_qu}
 
-            {keyExtractor("alerts.annotations.summary".split("."), jdata)}
-        """
-        res = sendNtfy(template, os.path.join(api_url, path))
-        print(res, path) if os.environ.get("DEBUG") == 'true' else ... 
-        return [res, os.path.join(api_url, path)]
-    else:
-        return "content type should be json and you should send json data\n"
+                {_sa}
+
+                {_de}
+
+                {_su}
+            """
+            res = sendNtfy(template, os.path.join(api_url, path))
+            print(res, path) if os.environ.get("DEBUG") == 'true' else ... 
+            return [res, os.path.join(api_url, path)]
+        else:
+            return "content type should be json and you should send json data\n"
 
 if __name__ == '__main__':
     app.run()
